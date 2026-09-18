@@ -33,8 +33,28 @@ interface Stage {
 interface VibRecipe {
   name: string;
   repo: string;
+  label: string;
+  git_branch: string;
+  image: string;
   id: string;
+  outdated?: boolean;
+  verified: boolean;
+  de?: string;
+  hardware?: string;
+  description?: string;
   stages: Stage[];
 }
 
-export type { VibRecipe, Module, Source, Stage };
+interface RepoInfo {
+  pretty_name?: string;
+  pretty_id?: string;
+  git: string;
+  image: string;
+  verified: boolean;
+  outdated?: boolean;
+  de?: string;
+  hardware?: string;
+  description?: string;
+}
+
+export type { VibRecipe, Module, Source, Stage, RepoInfo };
