@@ -41,7 +41,6 @@ interface VibRecipe {
   verified: boolean;
   de?: string;
   hardware?: string;
-  description?: string;
   category?: string;
   stages: Stage[];
 }
@@ -55,7 +54,6 @@ interface RepoInfo {
   outdated?: boolean;
   de?: string;
   hardware?: string;
-  description?: string;
 }
 
 interface CategoryInfo {

@@ -73,7 +73,6 @@ export default {
                 recipeData.verified = repoinfo.verified;
                 recipeData.de = repoinfo.de;
                 recipeData.hardware = repoinfo.hardware;
-                recipeData.description = repoinfo.description;
                 recipeData.category = source.category;
                 recipeData.name = repoinfo.pretty_name !== undefined ? repoinfo.pretty_name : recipeData.name;
                 recipeData.id = repoinfo.pretty_id !== undefined ? repoinfo.pretty_id : recipeData.id;
