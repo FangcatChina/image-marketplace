@@ -40,76 +40,79 @@ export default {
 
         try {
           const rawResults = await Promise.all(
-            AtlasConfig.repos.map(async (repoinfo) => {
-              let repo = repoinfo.git;
-              let image = repoinfo.image;
-              let label = "latest";
-              let git_branch = "main";
+            AtlasConfig.sources.flatMap((source) =>
+              source.repos.map(async (repoinfo) => {
+                let repo = repoinfo.git;
+                let image = repoinfo.image;
+                let label = "latest";
+                let git_branch = "main";
 
-              const imageParts = image.split(":");
-              if (imageParts.length > 1) {
-                image = imageParts[0];
-                label = imageParts[1];
-              }
+                const imageParts = image.split(":");
+                if (imageParts.length > 1) {
+                  image = imageParts[0];
+                  label = imageParts[1];
+                }
 
-              const repoParts = repo.split(":");
-              if (repoParts.length > 1) {
-                repo = repoParts[0];
-                git_branch = repoParts[1];
-              }
+                const repoParts = repo.split(":");
+                if (repoParts.length > 1) {
+                  repo = repoParts[0];
+                  git_branch = repoParts[1];
+                }
 
-              console.log(`Fetching recipe.yml from ${repo} using branch ${git_branch}`);
-              const recipeYaml = await this.fetchRecipeFromRepo(repo, git_branch);
-              if (recipeYaml === null) return null;
+                console.log(`Fetching recipe.yml from ${repo} using branch ${git_branch}`);
+                const recipeYaml = await this.fetchRecipeFromRepo(repo, git_branch);
+                if (recipeYaml === null) return null;
 
-              console.log(`Parsing recipe.yml from ${repo}`);
-              const recipeData = yaml.load(recipeYaml) as VibRecipe;
-              recipeData.repo = repo;
-              recipeData.git_branch = git_branch;
-              recipeData.image = image;
-              recipeData.label = label;
-              recipeData.outdated = repoinfo.outdated;
-              recipeData.verified = repoinfo.verified;
-              recipeData.de = repoinfo.de;
-              recipeData.hardware = repoinfo.hardware;
-              recipeData.description = repoinfo.description;
-              recipeData.name = repoinfo.pretty_name !== undefined ? repoinfo.pretty_name : recipeData.name;
-              recipeData.id = repoinfo.pretty_id !== undefined ? repoinfo.pretty_id : recipeData.id;
+                console.log(`Parsing recipe.yml from ${repo}`);
+                const recipeData = yaml.load(recipeYaml) as VibRecipe;
+                recipeData.repo = repo;
+                recipeData.git_branch = git_branch;
+                recipeData.image = image;
+                recipeData.label = label;
+                recipeData.outdated = repoinfo.outdated;
+                recipeData.verified = repoinfo.verified;
+                recipeData.de = repoinfo.de;
+                recipeData.hardware = repoinfo.hardware;
+                recipeData.description = repoinfo.description;
+                recipeData.category = source.category;
+                recipeData.name = repoinfo.pretty_name !== undefined ? repoinfo.pretty_name : recipeData.name;
+                recipeData.id = repoinfo.pretty_id !== undefined ? repoinfo.pretty_id : recipeData.id;
 
-              // @ts-ignore
-              recipeData.stages = await Promise.all(
-                recipeData.stages.map(async (stage) => {
-                  const processedModules = stage.modules
-                    ? await Promise.all(
-                        stage.modules.map(async (module) => {
-                          if (module.includes) {
-                            console.log(`Fetching and processing included modules for ${repo}`);
-                            return {
-                              ...module,
-                              modules: await Promise.all(
-                                module.includes.map(async (includePath) => {
-                                  const moduleContent = await this.fetchModuleContentFromRepo(
-                                    repo,
-                                    includePath,
-                                    git_branch,
-                                  );
-                                  return moduleContent
-                                    ? (yaml.load(moduleContent) as Module)
-                                    : module;
-                                }),
-                              ),
-                            };
-                          }
-                          return module;
-                        }),
-                      )
-                    : [];
-                  return { ...stage, modules: processedModules };
-                }),
-              );
+                // @ts-ignore
+                recipeData.stages = await Promise.all(
+                  recipeData.stages.map(async (stage) => {
+                    const processedModules = stage.modules
+                      ? await Promise.all(
+                          stage.modules.map(async (module) => {
+                            if (module.includes) {
+                              console.log(`Fetching and processing included modules for ${repo}`);
+                              return {
+                                ...module,
+                                modules: await Promise.all(
+                                  module.includes.map(async (includePath) => {
+                                    const moduleContent = await this.fetchModuleContentFromRepo(
+                                      repo,
+                                      includePath,
+                                      git_branch,
+                                    );
+                                    return moduleContent
+                                      ? (yaml.load(moduleContent) as Module)
+                                      : module;
+                                  }),
+                                ),
+                              };
+                            }
+                            return module;
+                          }),
+                        )
+                      : [];
+                    return { ...stage, modules: processedModules };
+                  }),
+                );
 
-              return recipeData;
-            }),
+                return recipeData;
+              }),
+            ),
           );
 
           const vibRecipes = rawResults.filter((r): r is VibRecipe => r !== null);

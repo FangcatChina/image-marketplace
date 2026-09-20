@@ -3,20 +3,18 @@
     <section class="bg-gray-100 dark:bg-gray-800 text-black dark:text-gray-200 py-8 transition-colors duration-300">
       <div class="container relative mx-auto px-4 py-8 overflow-hidden rounded-xl">
         <div
-          class="absolute inset-0 z-0 rounded-xl"
+          class="hero-backdrop absolute inset-0 z-0 rounded-xl"
           :style="{
-            backgroundImage: 'url(https://raw.githubusercontent.com/Vanilla-OS/vanilla-backgrounds/main/backgrounds/fairy-tale-light.webp)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'blur(8px)',
-            transform: 'scale(1.05)',
+            '--hero-bg-light': `url(${backgrounds.light})`,
+            '--hero-bg-dark': `url(${backgrounds.dark})`,
           }"
         ></div>
 
         <div class="relative z-10">
-          <h1 class="text-3xl font-bold text-center">Vanilla OS Image Marketplace</h1>
-          <p class="mt-2 text-center opacity-80">
-            Showing {{ filteredRecipes.length }} of {{ atlasStore.vibRecipes.length }} recipes
+          <h1 class="text-3xl font-bold text-center">{{ activeCategory.title }}</h1>
+          <p v-if="activeCategory.subtitle" class="mt-2 text-center opacity-80">{{ activeCategory.subtitle }}</p>
+          <p class="mt-2 text-center opacity-70 text-sm">
+            Showing {{ filteredRecipes.length }} of {{ categoryRecipes.length }} recipes
           </p>
 
           <div class="max-w-3xl mx-auto mt-6 space-y-4">
@@ -175,6 +173,24 @@
                   <span class="font-medium">Hardware:</span> {{ recipe.hardware }}
                 </span>
               </div>
+
+              <div v-if="atlasStore.activeCategory === 'vib-recipes'" class="flex items-center flex-wrap gap-2 mt-3">
+                <span
+                  class="inline-flex items-center bg-purple-100 dark:bg-purple-800 dark:text-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded gap-2">
+                  <span class="material-icons align-middle text-base">layers</span>
+                  {{ recipe.stages.length }}
+                </span>
+                <span
+                  class="inline-flex items-center bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 text-xs font-medium px-2.5 py-0.5 rounded gap-2">
+                  <span class="material-icons align-middle text-base">extension</span>
+                  {{ getModulesCount(recipe.stages) }}
+                </span>
+                <span
+                  class="inline-flex items-center bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 text-xs font-medium px-2.5 py-0.5 rounded gap-2">
+                  <span class="material-icons align-middle text-base">terminal</span>
+                  {{ getRunsCount(recipe.stages) }}
+                </span>
+              </div>
             </div>
           </router-link>
         </div>
@@ -210,6 +226,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useAtlasStore } from "@/core/store";
+import AtlasConfig from "@/config";
 import RecipeStatusBadge from "@/components/RecipeStatusBadge.vue";
 
 export default defineComponent({
@@ -223,19 +240,34 @@ export default defineComponent({
       searchQuery: "",
       activeTags: [] as string[],
       hideOutdated: true,
+      backgrounds: {
+        light: "https://raw.githubusercontent.com/Vanilla-OS/vanilla-backgrounds/main/backgrounds/fairy-tale-light.webp",
+        dark: "https://raw.githubusercontent.com/Vanilla-OS/vanilla-backgrounds/main/backgrounds/fairy-tale-dark.webp",
+      },
     };
   },
   setup() {
     const atlasStore = useAtlasStore();
-    return { atlasStore };
+    const categories = AtlasConfig.categories;
+    return { atlasStore, categories };
   },
   computed: {
+    activeCategory() {
+      return (
+        this.categories.find((category: any) => category.id === this.atlasStore.activeCategory) ||
+        this.categories[0]
+      );
+    },
+    categoryRecipes() {
+      const recipes = this.atlasStore.vibRecipes || [];
+      return recipes.filter((recipe: any) => recipe.category === this.atlasStore.activeCategory);
+    },
     availableTags(): Array<{ label: string; value: string; type: 'de' | 'hardware' }> {
       if (!this.atlasStore.vibRecipes) return [];
 
       const tags = new Map<string, { label: string; value: string; type: 'de' | 'hardware' }>();
 
-      this.atlasStore.vibRecipes.forEach((recipe: any) => {
+      this.categoryRecipes.forEach((recipe: any) => {
         if (recipe.de) {
           const key = `de:${recipe.de}`;
           if (!tags.has(key)) tags.set(key, { label: recipe.de, value: recipe.de, type: 'de' });
@@ -257,7 +289,7 @@ export default defineComponent({
       const query = this.searchQuery.toLowerCase().trim();
       const hasTags = this.activeTags.length > 0;
 
-      return this.atlasStore.vibRecipes.filter((recipe: any) => {
+      return this.categoryRecipes.filter((recipe: any) => {
         if (this.hideOutdated && recipe.outdated) return false;
 
         const matchesSearch = !query ||
@@ -356,6 +388,21 @@ export default defineComponent({
 </script>
 
 <style>
+.hero-backdrop {
+  background-image: var(--hero-bg-light);
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px);
+  transform: scale(1.05);
+  transition: background-image 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hero-backdrop {
+    background-image: var(--hero-bg-dark);
+  }
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;

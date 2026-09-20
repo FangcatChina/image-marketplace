@@ -26,15 +26,10 @@
                 </div>
                 <div class="">
                     <div class="flex gap-2 mb-2">
-                        <button class="py-1 px-3 text-sm rounded focus:outline-none"
-                            :class="{ 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-200': pullType === 'abroot', 'bg-transparent text-gray-700 dark:text-gray-400': pullType !== 'abroot' }"
-                            @click="pullType = 'abroot'">ABRoot</button>
-                        <button class="py-1 px-3 text-sm rounded focus:outline-none"
-                            :class="{ 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-200': pullType === 'podman', 'bg-transparent text-gray-700 dark:text-gray-400': pullType !== 'podman' }"
-                            @click="pullType = 'podman'">Podman</button>
-                        <button class="py-1 px-3 text-sm rounded focus:outline-none"
-                            :class="{ 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-200': pullType === 'docker', 'bg-transparent text-gray-700 dark:text-gray-400': pullType !== 'docker' }"
-                            @click="pullType = 'docker'">Docker</button>
+                        <button v-for="option in pullOptions" :key="option.id"
+                            class="py-1 px-3 text-sm rounded focus:outline-none"
+                            :class="{ 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-200': pullType === option.id, 'bg-transparent text-gray-700 dark:text-gray-400': pullType !== option.id }"
+                            @click="pullType = option.id">{{ option.label }}</button>
                     </div>
                     <div class="flex gap-2">
                         <div
@@ -156,28 +151,14 @@ export default defineComponent({
     },
     async mounted() {
         const router = useRouter();
-        const { id, module } = router.currentRoute.value.params;
+        const { id } = router.currentRoute.value.params;
 
         try {
             // @ts-ignore
             this.recipe = await this.atlasStore.getVibRecipe(id);
+            this.pullType = this.pullOptions[0]?.id ?? '';
         } catch (error) {
             console.error("Error fetching recipe:", error);
-        }
-
-        if (module && this.recipe?.modules) {
-            this.curTab = "modules";
-
-            try {
-                for (const mod of this.recipe.modules) {
-                    if (mod.name === module) {
-                        this.moduleDetails = mod;
-                        break;
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching module details:", error);
-            }
         }
     },
     methods: {
@@ -186,6 +167,15 @@ export default defineComponent({
         },
     },
     computed: {
+        pullOptions(): Array<{ id: string; label: string }> {
+            if (this.recipe?.category === 'vib-recipes') {
+                return [
+                    { id: 'podman', label: 'Podman' },
+                    { id: 'docker', label: 'Docker' },
+                ];
+            }
+            return [{ id: 'abroot', label: 'ABRoot' }];
+        },
         recipeSourceUrl() {
             if (!this.recipe) {
                 return "";

@@ -42,6 +42,7 @@ interface VibRecipe {
   de?: string;
   hardware?: string;
   description?: string;
+  category?: string;
   stages: Stage[];
 }
 
@@ -57,4 +58,12 @@ interface RepoInfo {
   description?: string;
 }
 
-export type { VibRecipe, Module, Source, Stage, RepoInfo };
+interface CategoryInfo {
+  id: string;
+  label: string;
+  icon: string;
+  title: string;
+  subtitle?: string;
+}
+
+export type { VibRecipe, Module, Source, Stage, RepoInfo, CategoryInfo };
