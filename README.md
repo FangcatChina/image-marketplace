@@ -20,17 +20,15 @@ matters:
 
 ```yaml
 ---
-name: Bluefin
-image: ghcr.io/ublue-os/bluefin
+name: Vanilla OS GNOME Image
+image: ghcr.io/vanilla-os/gnome
 tag: latest
-repo: https://github.com/ublue-os/bluefin
-branch: main
-maintainer: community
+repo: https://github.com/Vanilla-OS/desktop-image
+branch: dev
+maintainer: official
 status: normal
 tags:
   - gnome
-  - atomic
-  - developer
 ---
 ```
 
@@ -64,18 +62,23 @@ Files without a valid `image` value are ignored by the listing.
 
 ```yaml
 ---
-name: Vanilla OS Desktops
-image:
-  - ghcr.io/vanilla-os/gnome
-  - ghcr.io/vanilla-os/kde
-  - ghcr.io/vanilla-os/pantheon
-tag:
-  - latest
-  - latest
-  - edge
-repo: https://github.com/Vanilla-OS/desktop-image
-branch: dev
+name: Vanilla OS China Images
+image: 
+  - ghcr.io/vanilla-flavors/gnome-china
+  - ghcr.io/vanilla-flavors/gnome-china-nvidia
+  - ghcr.io/vanilla-flavors/gnome-china-nvidia-modern
+  - ghcr.io/vanilla-flavors/gnome-china-vm
+tag: latest
 collection: true
+repo: https://github.com/Vanilla-Flavors/china-image
+branch: dev
+maintainer: official
+status: normal
+tags:
+  - gnome
+  - china
+  - nvidia
+  - vm
 ---
 ```
 
