@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   srcDir: "images",
+  cleanUrls: true,
   lang: 'en-US',
 
   title: "Vanilla OS Image Marketplace",

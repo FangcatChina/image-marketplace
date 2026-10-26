@@ -1,11 +1,62 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { withBase } from 'vitepress'
-import { data as entries } from '../../data/images.data'
+import { data } from '../../data/images.data'
 import ImageBadges from './ImageBadges.vue'
 import SiteHeader from './SiteHeader.vue'
-import type { ViewMode } from '../types'
+import type { ImageRef, Maintainer, Status, ViewMode } from '../types'
 import { imageRef } from '../utils/repo'
+
+interface CatalogItem {
+  url: string
+  name: string
+  maintainer: Maintainer
+  status: Status
+  tags: string[]
+  refs: ImageRef[]
+  series: boolean
+  collection: boolean
+  count: number
+  search: string
+}
+
+const items: CatalogItem[] = [
+  ...data.series.map((entry) => ({
+    url: entry.url,
+    name: entry.name,
+    maintainer: entry.maintainer,
+    status: entry.status,
+    tags: entry.tags,
+    refs: [] as ImageRef[],
+    series: true,
+    collection: false,
+    count: entry.images.length,
+    search: [
+      entry.name,
+      ...entry.tags,
+      ...entry.images.flatMap((image) => [
+        image.name,
+        ...image.refs.map((ref) => imageRef(ref.image, ref.tag))
+      ])
+    ]
+      .join(' ')
+      .toLowerCase()
+  })),
+  ...data.images.map((entry) => ({
+    url: entry.url,
+    name: entry.name,
+    maintainer: entry.maintainer,
+    status: entry.status,
+    tags: entry.tags,
+    refs: entry.refs,
+    series: false,
+    collection: entry.collection,
+    count: entry.refs.length,
+    search: [entry.name, entry.branch, ...entry.refs.map((ref) => imageRef(ref.image, ref.tag)), ...entry.tags]
+      .join(' ')
+      .toLowerCase()
+  }))
+].sort((a, b) => a.name.localeCompare(b.name))
 
 const query = ref('')
 const selectedTags = ref<string[]>([])
@@ -13,7 +64,7 @@ const view = ref<ViewMode>('grid')
 
 const tagCounts = computed(() => {
   const counts = new Map<string, number>()
-  for (const entry of entries) {
+  for (const entry of items) {
     for (const tag of entry.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1)
   }
   return [...counts.entries()].sort(
@@ -24,16 +75,8 @@ const tagCounts = computed(() => {
 const filtered = computed(() => {
   const keyword = query.value.trim().toLowerCase()
 
-  return entries.filter((entry) => {
-    const haystack = [
-      entry.name,
-      entry.branch,
-      ...entry.refs.map((item) => imageRef(item.image, item.tag)),
-      ...entry.tags
-    ]
-      .join(' ')
-      .toLowerCase()
-    const matchesKeyword = !keyword || haystack.includes(keyword)
+  return items.filter((entry) => {
+    const matchesKeyword = !keyword || entry.search.includes(keyword)
     const matchesTags = selectedTags.value.every((tag) => entry.tags.includes(tag))
     return matchesKeyword && matchesTags
   })
@@ -103,7 +146,7 @@ function resetFilters() {
           @click="selectedTags = []"
         >
           All
-          <span>{{ entries.length }}</span>
+          <span>{{ items.length }}</span>
         </button>
         <button
           v-for="[tag, count] in tagCounts"
@@ -119,7 +162,7 @@ function resetFilters() {
       </div>
 
       <div class="im-summary">
-        <span>Showing {{ filtered.length }} of {{ entries.length }} images</span>
+        <span>Showing {{ filtered.length }} of {{ items.length }} entries</span>
         <button v-if="query || selectedTags.length" type="button" @click="resetFilters">
           <i class="fa-solid fa-rotate-left" aria-hidden="true" />
           Reset filters
@@ -143,13 +186,17 @@ function resetFilters() {
             <ImageBadges
               :maintainer="entry.maintainer"
               :status="entry.status"
+              :series="entry.series"
               :collection="entry.collection"
-              :count="entry.refs.length"
+              :count="entry.count"
             />
           </div>
           <code class="im-card-ref">
-            {{ imageRef(entry.refs[0].image, entry.refs[0].tag) }}
-            <span v-if="entry.refs.length > 1" class="im-card-extra">+{{ entry.refs.length - 1 }}</span>
+            <template v-if="entry.series">{{ entry.count }} images</template>
+            <template v-else>
+              {{ imageRef(entry.refs[0].image, entry.refs[0].tag) }}
+              <span v-if="entry.count > 1" class="im-card-extra">+{{ entry.count - 1 }}</span>
+            </template>
           </code>
           <div class="im-card-tags">
             <span v-for="tag in entry.tags" :key="tag">#{{ tag }}</span>
@@ -177,16 +224,20 @@ function resetFilters() {
         >
           <span class="im-sheet-name">{{ entry.name }}</span>
           <code class="im-sheet-ref">
-            {{ imageRef(entry.refs[0].image, entry.refs[0].tag) }}
-            <span v-if="entry.refs.length > 1" class="im-card-extra">+{{ entry.refs.length - 1 }}</span>
+            <template v-if="entry.series">{{ entry.count }} images</template>
+            <template v-else>
+              {{ imageRef(entry.refs[0].image, entry.refs[0].tag) }}
+              <span v-if="entry.count > 1" class="im-card-extra">+{{ entry.count - 1 }}</span>
+            </template>
           </code>
           <span class="im-sheet-tags">{{ entry.tags.map((tag) => `#${tag}`).join(' ') }}</span>
           <span class="im-sheet-badges">
             <ImageBadges
               :maintainer="entry.maintainer"
               :status="entry.status"
+              :series="entry.series"
               :collection="entry.collection"
-              :count="entry.refs.length"
+              :count="entry.count"
             />
           </span>
           <i class="fa-solid fa-arrow-right im-sheet-arrow" aria-hidden="true" />

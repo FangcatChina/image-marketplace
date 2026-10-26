@@ -19,3 +19,28 @@ export interface ImageEntry {
   tags: string[]
   collection: boolean
 }
+
+export interface SeriesOption {
+  label: string
+  target: string
+}
+
+export interface SeriesGroup {
+  label: string
+  options: SeriesOption[]
+}
+
+export interface SeriesEntry {
+  url: string
+  name: string
+  maintainer: Maintainer
+  status: Status
+  tags: string[]
+  groups: SeriesGroup[]
+  images: ImageEntry[]
+}
+
+export interface MarketplaceData {
+  series: SeriesEntry[]
+  images: ImageEntry[]
+}

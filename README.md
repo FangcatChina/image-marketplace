@@ -1,6 +1,6 @@
 # Vanilla OS Image Marketplace
 
-A VitePress site that lists Vanilla OS images. Each image is a single Markdown post with YAML frontmatter; the page renders that image's `README.md` and `recipe.yml` directly from its repository, and the home page provides search, tag filters and two browsing views.
+A VitePress site that lists Vanilla OS images. Posts live in series folders under `images/`; each series is described by the `index.md` of its folder, and each image is a single Markdown post with YAML frontmatter. The image page renders that image's `README.md` and `recipe.yml` directly from its repository, and the home page provides search, tag filters and two browsing views.
 
 ## Quick start
 
@@ -13,10 +13,89 @@ npm run preview  # preview the build
 
 Requirements: Node.js 20+.
 
+## Layout
+
+```text
+images/
+  index.md            # site home (layout: marketplace)
+  public/             # static assets
+  gnome/
+    index.md          # series cover
+    gnome.md          # one image per file
+    gnome-nvidia.md
+    gnome-vm.md
+  kde/
+    index.md
+    ...
+```
+
+Every `.md` file placed in the same folder as an `index.md` belongs to that
+series. Files left directly under `images/` (next to the home `index.md`) are
+listed as standalone images.
+
+## Adding a series
+
+Create a folder under `images/` with an `index.md`. The body is unused —
+frontmatter is what matters:
+
+```yaml
+---
+name: Vanilla OS GNOME Images
+maintainer: official
+status: normal
+tags:
+  - gnome
+options:
+  Hardware:
+    "Generic": gnome.md
+    "NVIDIA": gnome-nvidia.md
+  "Virtual machine":
+    "GNOME VM": gnome-vm.md
+---
+```
+
+| Field        | Type                             | Default     | Description                                            |
+| ------------ | -------------------------------- | ----------- | ------------------------------------------------------ |
+| `name`       | string                           | file URL    | Series title shown on the home card and the series page |
+| `maintainer` | `official` \| `community`        | `community` | Badge next to the title                                |
+| `status`     | `normal` \| `outdated` \| `wip`  | `normal`    | Badge next to the title                                |
+| `tags`       | string[]                         | `[]`        | Merged with the tags of every image in the series      |
+| `options`    | mapping \| mapping[]             | —           | Guide used to pick an image (see below)                |
+
+## Choosing an image (`options`)
+
+`options` renders the “Choose an image” guide on the series page. Each
+top-level key is a group (what the user is choosing by) and each nested
+key/target pair is a choice linking to an image of the same folder:
+
+```yaml
+options:
+  Hardware:
+    NVIDIA: gnome-nvidia.md
+  Region:
+    "Mainland China": gnome-china.md
+```
+
+A list of single-key mappings works too. Deeper nesting is flattened into
+labels joined with ` · `, which lets you split a group in sub-questions:
+
+```yaml
+options:
+  - "Hardware":
+      "NVIDIA": gnome-nvidia.md
+  - "Virtual machine":
+      "VM": gnome-vm.md
+```
+
+Targets are paths relative to the series folder (`.md` may be omitted, `./` is
+allowed). Choices are rendered with the target's title; a target that does not
+match a collected post still renders as a link, so keep it in sync with the
+files.
+
 ## Adding an image
 
-Create a new `.md` file under `images/`. The body is unused — frontmatter is what
-matters:
+Create a `.md` file inside a series folder. The body is unused — frontmatter is
+what matters:
 
 ```yaml
 ---
@@ -47,7 +126,8 @@ tags:
 | `collection` | boolean            | `false`     | Enables the image picker in the command bar (see below)          |
 | `custom_raw` | string             | `''`        | Custom raw-file source for `README.md` / `recipe.yml`            |
 
-Files without a valid `image` value are ignored by the listing.
+Files without a valid `image` value are ignored by the listing; files without a
+sibling `index.md` are listed as standalone images.
 
 ### Collections
 

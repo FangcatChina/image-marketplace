@@ -1,5 +1,5 @@
 ---
-name: Vanilla Kipferl China Image
+name: Vanilla Kipferl China Images
 image: 
   - ghcr.io/vanilla-kde/plasma-china
   - ghcr.io/vanilla-kde/plasma-vm-china

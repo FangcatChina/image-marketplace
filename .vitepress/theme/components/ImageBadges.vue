@@ -5,6 +5,7 @@ defineProps<{
   maintainer: Maintainer
   status: Status
   collection?: boolean
+  series?: boolean
   count?: number
 }>()
 
@@ -29,6 +30,11 @@ const statusMeta = {
     <span v-if="status !== 'normal'" class="im-badge" :class="`im-badge--${status}`">
       <i :class="statusMeta[status].icon" aria-hidden="true" />
       {{ statusMeta[status].label }}
+    </span>
+    <span v-if="series" class="im-badge im-badge--series">
+      <i class="fa-solid fa-boxes-stacked" aria-hidden="true" />
+      Series
+      <span v-if="count" class="im-badge-count">{{ count }}</span>
     </span>
     <span v-if="collection" class="im-badge im-badge--collection">
       <i class="fa-solid fa-layer-group" aria-hidden="true" />
@@ -77,6 +83,13 @@ const statusMeta = {
   border-color: var(--vp-c-brand-soft);
   color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-soft);
+  text-transform: none;
+}
+
+.im-badge--series {
+  border-color: var(--vp-c-divider);
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-default-soft);
   text-transform: none;
 }
 

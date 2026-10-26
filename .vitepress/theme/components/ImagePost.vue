@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useData } from 'vitepress'
+import { useData, withBase } from 'vitepress'
+import { data } from '../../data/images.data'
 import ImageBadges from './ImageBadges.vue'
 import CommandBar from './CommandBar.vue'
 import SiteHeader from './SiteHeader.vue'
@@ -9,7 +10,12 @@ import { useRemoteFile } from '../composables/useRemoteFile'
 import type { Maintainer, PostTab, Status } from '../types'
 import { expandRefs, imageRef, normalizeRepo, rawFileUrls, repoBlobUrl } from '../utils/repo'
 
-const { frontmatter, isDark } = useData()
+const { frontmatter, isDark, page } = useData()
+
+const series = computed(() => {
+  const url = `/${page.value.relativePath.replace(/\.md$/, '')}`
+  return data.series.find((entry) => entry.images.some((image) => image.url === url))
+})
 
 const name = computed(() => String(frontmatter.value.name ?? 'Untitled image'))
 const repo = computed(() => normalizeRepo(String(frontmatter.value.repo ?? '')))
@@ -92,6 +98,11 @@ function openRecipeLink(event: Event) {
     <SiteHeader />
 
     <main class="im-post">
+      <a v-if="series" class="im-post-series" :href="withBase(series.url)">
+        <i class="fa-solid fa-boxes-stacked" aria-hidden="true" />
+        {{ series.name }}
+      </a>
+
       <div class="im-post-header">
         <div class="im-post-heading">
           <div class="im-post-title-row">
@@ -221,6 +232,24 @@ function openRecipeLink(event: Event) {
   gap: 20px;
   align-items: flex-start;
   justify-content: space-between;
+}
+
+.im-post-series {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 14px;
+  color: var(--vp-c-text-3);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.im-post-series:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.im-post-series i {
+  font-size: 11px;
 }
 
 .im-post-heading {
