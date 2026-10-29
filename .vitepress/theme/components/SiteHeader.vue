@@ -14,6 +14,9 @@ const { site } = useData()
       <span class="im-header-title">{{ site.title }}</span>
     </a>
     <nav class="im-header-nav">
+      <a href="https://github.com/Vanilla-OS/image-marketplace" target="_blank" rel="noreferrer">
+        <i class="fa-brands fa-github" aria-hidden="true" /> Add yours
+      </a>
       <a href="https://vanillaos.org/" target="_blank" rel="noreferrer">
         <i class="fa-solid fa-compass" aria-hidden="true" /> Vanilla OS
       </a>
